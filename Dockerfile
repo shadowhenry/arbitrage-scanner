@@ -2,10 +2,17 @@
 FROM node:22-alpine AS workspace
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@11.20.0 --activate
+# Keep pnpm's store and its SQLite index OUT of image layers by using BuildKit
+# cache mounts. This avoids "ERR_SQLITE_ERROR disk I/O error" from a corrupted
+# SQLite store index persisting in a cached layer (common on overlayfs VPS).
+ENV XDG_CACHE_HOME=/root/.cache \
+    npm_config_store_dir=/root/.local/share/pnpm/store
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json vitest.config.ts eslint.config.mjs ./
 COPY apps ./apps
 COPY packages ./packages
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.cache/pnpm \
+    --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 # Build the Vue dashboard into static assets first.
 FROM workspace AS dashboard-build

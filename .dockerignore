@@ -7,6 +7,7 @@ node_modules
 **/node_modules
 **/dist
 **/*.tsbuildinfo
+apps/api/public
 backups
 coverage
 .DS_Store
