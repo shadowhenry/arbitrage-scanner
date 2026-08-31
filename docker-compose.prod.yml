@@ -91,6 +91,8 @@ services:
     environment:
       NODE_ENV: production
       HEALTH_PORT: "3001"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-arbitrage}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-arbitrage_scanner}
+      REDIS_URL: redis://redis:6379
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -115,6 +117,8 @@ services:
       NODE_ENV: production
       HEALTH_PORT: "3002"
       API_URL: http://api:3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-arbitrage}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-arbitrage_scanner}
+      REDIS_URL: redis://redis:6379
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -140,6 +144,8 @@ services:
     environment:
       NODE_ENV: production
       HEALTH_PORT: "3003"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-arbitrage}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-arbitrage_scanner}
+      REDIS_URL: redis://redis:6379
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -162,6 +168,8 @@ services:
       API_HOST: 0.0.0.0
       API_PORT: "3000"
       MOCK_FEED: "0"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-arbitrage}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-arbitrage_scanner}
+      REDIS_URL: redis://redis:6379
     # Single published port: Nginx (managed by the operator) reverse-proxies the
     # whole site — dashboard SPA, /api, and /ws — to this one port.
     ports:
