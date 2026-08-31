@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.prod
+backups/
+*.log
+.DS_Store
+# Dashboard build copied into the API image at Docker build time.
+apps/api/public/

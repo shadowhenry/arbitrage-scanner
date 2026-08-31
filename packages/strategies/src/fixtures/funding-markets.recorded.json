@@ -1,0 +1,47 @@
+{
+  "source": "Recorded public market-data payloads normalized from Binance USD-M, Bybit Linear, and Hyperliquid fixtures",
+  "recordedAt": "2026-08-26T02:00:00.000Z",
+  "markets": [
+    {
+      "venueId": "binance-usdm",
+      "venueName": "Binance USD-M Futures",
+      "symbol": "BTC",
+      "markPrice": "100.05",
+      "indexPrice": "100.00",
+      "hourlyFunding": "0.00001",
+      "bids": [["99.95", "50"], ["99.90", "100"]],
+      "asks": [["100.05", "50"], ["100.10", "100"]]
+    },
+    {
+      "venueId": "bybit-linear",
+      "venueName": "Bybit Linear",
+      "symbol": "BTC",
+      "markPrice": "100.10",
+      "indexPrice": "100.01",
+      "hourlyFunding": "0.00003",
+      "bids": [["100.00", "50"], ["99.94", "100"]],
+      "asks": [["100.12", "50"], ["100.18", "100"]]
+    },
+    {
+      "venueId": "hyperliquid",
+      "venueName": "Hyperliquid",
+      "symbol": "BTC",
+      "markPrice": "100.02",
+      "indexPrice": "100.00",
+      "hourlyFunding": "-0.00002",
+      "bids": [["99.98", "50"], ["99.92", "100"]],
+      "asks": [["100.02", "50"], ["100.08", "100"]]
+    },
+    {
+      "venueId": "binance-usdm",
+      "venueName": "Binance USD-M Futures",
+      "symbol": "ETH",
+      "markPrice": "2.00",
+      "indexPrice": "2.00",
+      "hourlyFunding": "0.00001",
+      "bids": [["1.99", "1000"]],
+      "asks": [["2.01", "1000"]]
+    }
+  ]
+}
+

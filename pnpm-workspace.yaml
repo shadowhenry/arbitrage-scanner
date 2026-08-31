@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+
+verifyDepsBeforeRun: false
+
+allowBuilds:
+  esbuild: true
+  msgpackr-extract: true

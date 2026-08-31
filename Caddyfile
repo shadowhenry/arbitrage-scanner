@@ -1,0 +1,29 @@
+{
+	email {$CADDY_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	handle_path /api/* {
+		reverse_proxy api:3000
+	}
+
+	handle /ws {
+		reverse_proxy api:3000
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+http://127.0.0.1 {
+	respond /healthz "ok" 200
+}

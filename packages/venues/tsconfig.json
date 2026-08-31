@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "rootDir": ".", "outDir": "dist" },
+  "include": ["src/**/*.ts", "binance/**/*.ts", "bybit/**/*.ts", "hyperliquid/**/*.ts", "jupiter/**/*.ts", "raydium/**/*.ts", "polymarket/**/*.ts"]
+}

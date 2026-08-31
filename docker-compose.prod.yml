@@ -1,0 +1,190 @@
+name: arbitrage-scanner
+
+x-service: &service
+  restart: unless-stopped
+  init: true
+  logging: &logging
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+  security_opt:
+    - no-new-privileges:true
+
+x-app: &app
+  <<: *service
+  image: arbitrage-scanner-app:${IMAGE_TAG:-latest}
+  build:
+    context: .
+    target: application
+  env_file:
+    - ${ENV_FILE:-.env.prod}
+  environment:
+    NODE_ENV: production
+    # HOME under /tmp keeps pnpm/tsx caches writable on the read-only root.
+    HOME: /tmp
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: "5432"
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    DATABASE_URL: postgresql://${POSTGRES_USER:-arbitrage}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-arbitrage_scanner}
+    REDIS_URL: redis://redis:6379
+  read_only: true
+  tmpfs:
+    - /tmp:size=64m,mode=1777
+  networks:
+    - backend
+
+services:
+  postgres:
+    <<: *service
+    image: postgres:17-alpine
+    # Project uses PostgreSQL only. Host port is mapped only when
+    # POSTGRES_PUBLISH_PORT is set (e.g. 5433 to avoid clashing with an existing PG).
+    ports:
+      - "${POSTGRES_PUBLISH_PORT:-}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-arbitrage_scanner}
+      POSTGRES_USER: ${POSTGRES_USER:-arbitrage}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    deploy:
+      resources:
+        limits: { cpus: "1.50", memory: 2G }
+        reservations: { cpus: "0.25", memory: 256M }
+
+  redis:
+    <<: *service
+    # Compose-managed Redis. Host port defaults to 6380 to avoid clashing with an
+    # existing Redis on 6379. App services always talk to the internal redis:6379.
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory", "512mb", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "${REDIS_PUBLISH_PORT:-6380}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits: { cpus: "0.75", memory: 768M }
+        reservations: { cpus: "0.10", memory: 128M }
+
+  collector:
+    <<: *app
+    command: ["pnpm", "--filter", "@arbitrage-scanner/collector", "start:prod"]
+    environment:
+      NODE_ENV: production
+      HEALTH_PORT: "3001"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks:
+      - backend
+      - egress
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits: { cpus: "1.50", memory: 1G }
+        reservations: { cpus: "0.25", memory: 256M }
+
+  scanner:
+    <<: *app
+    command: ["pnpm", "--filter", "@arbitrage-scanner/scanner", "start:prod"]
+    environment:
+      NODE_ENV: production
+      HEALTH_PORT: "3002"
+      API_URL: http://api:3000
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      api: { condition: service_healthy }
+      collector: { condition: service_healthy }
+    networks:
+      - backend
+      - egress
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits: { cpus: "1.50", memory: 1G }
+        reservations: { cpus: "0.25", memory: 256M }
+
+  simulator:
+    <<: *app
+    command: ["pnpm", "--filter", "@arbitrage-scanner/simulator", "start:prod"]
+    environment:
+      NODE_ENV: production
+      HEALTH_PORT: "3003"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3003/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits: { cpus: "1.00", memory: 768M }
+        reservations: { cpus: "0.10", memory: 128M }
+
+  api:
+    <<: *app
+    command: ["pnpm", "--filter", "@arbitrage-scanner/api", "start"]
+    environment:
+      NODE_ENV: production
+      API_HOST: 0.0.0.0
+      API_PORT: "3000"
+      MOCK_FEED: "0"
+    # Single published port: Nginx (managed by the operator) reverse-proxies the
+    # whole site — dashboard SPA, /api, and /ws — to this one port.
+    ports:
+      - "${API_PUBLISH_PORT:-8080}:3000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits: { cpus: "1.00", memory: 768M }
+        reservations: { cpus: "0.10", memory: 128M }
+
+networks:
+  backend:
+    internal: true
+  egress:
+
+volumes:
+  postgres-data:
+  redis-data:

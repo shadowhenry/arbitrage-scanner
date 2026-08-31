@@ -1,0 +1,31 @@
+{
+  "source": "Recorded public spot market-data payloads normalized from Binance Spot and Bybit Spot fixtures",
+  "recordedAt": "2026-08-26T02:00:00.000Z",
+  "markets": [
+    {
+      "venueId": "binance",
+      "venueName": "Binance",
+      "symbol": "BTC",
+      "lastPrice": "99.90",
+      "bids": [["99.88", "50"], ["99.82", "100"]],
+      "asks": [["99.92", "50"], ["99.98", "100"]]
+    },
+    {
+      "venueId": "bybit",
+      "venueName": "Bybit",
+      "symbol": "BTC",
+      "lastPrice": "99.94",
+      "bids": [["99.90", "50"], ["99.84", "100"]],
+      "asks": [["99.96", "50"], ["100.02", "100"]]
+    },
+    {
+      "venueId": "binance",
+      "venueName": "Binance",
+      "symbol": "SOL",
+      "lastPrice": "1.00",
+      "bids": [["0.99", "1000"]],
+      "asks": [["1.01", "1000"]]
+    }
+  ]
+}
+

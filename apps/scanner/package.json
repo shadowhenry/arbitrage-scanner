@@ -1,0 +1,27 @@
+{
+  "name": "@arbitrage-scanner/scanner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
+    "start": "tsx --env-file-if-exists=../../.env src/index.ts",
+    "start:prod": "tsx --env-file-if-exists=../../.env src/production.ts",
+    "cex": "tsx --env-file-if-exists=../../.env src/cex.ts",
+    "funding": "tsx --env-file-if-exists=../../.env src/funding.ts",
+    "basis": "tsx --env-file-if-exists=../../.env src/basis.ts",
+    "cex-dex": "tsx --env-file-if-exists=../../.env src/cex-dex.ts",
+    "dex-dex": "tsx --env-file-if-exists=../../.env src/dex-dex.ts",
+    "polymarket": "tsx --env-file-if-exists=../../.env src/polymarket.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@arbitrage-scanner/core": "workspace:*",
+    "@arbitrage-scanner/risk": "workspace:*",
+    "@arbitrage-scanner/strategies": "workspace:*",
+    "@arbitrage-scanner/venues": "workspace:*",
+    "bullmq": "^5.63.0"
+  },
+  "devDependencies": { "tsx": "^4.20.0" }
+}
