@@ -15,6 +15,16 @@
 - **Real-time dashboard** — Vue 3 + Element Plus + ECharts; scanners push detected opportunities to the API, which broadcasts them over WebSocket.
 - **Quality gates** — strict TypeScript, `pnpm lint` / `typecheck` / `test` must pass.
 
+## Dashboard
+
+The research dashboard gives a live, read-only view of detected opportunities, simulated P&L, net-edge leaders, and capital allocation. Scanners push opportunities to the API, which broadcasts them over WebSocket so the UI updates in real time.
+
+![Overview](./docs/assets/dashboard-1.png)
+*Overview — research command center: opportunity counts, simulated profit, best opportunity, net-edge leaders, and capital allocation.*
+
+![Opportunities](./docs/assets/dashboard-2.png)
+*Opportunities — executable two-leg combinations across all strategies (S1–S6), filterable by asset, venue, strategy, and minimum net edge.*
+
 ## Supported venues
 
 | Type | Venues |
