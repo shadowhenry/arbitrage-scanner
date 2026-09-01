@@ -1,4 +1,4 @@
-import type { MarketQuote, PerpMarket } from '@arbitrage-scanner/core';
+import type { FundingRate, MarketQuote, PerpMarket } from '@arbitrage-scanner/core';
 import { ReconnectingWebSocket } from '../src/websocket.js';
 import { normalizeBybitFundingRate, normalizeBybitLinearTicker, normalizeBybitSpotTicker } from './normalize.js';
 import { BybitLocalOrderBook } from './orderbook.js';
@@ -81,7 +81,14 @@ export class BybitPublicAdapter {
     const staleAfterMs = this.#options.staleAfterMs ?? 5_000;
 
     if (this.#options.category === 'spot') {
-      const quote = normalizeBybitSpotTicker(ticker, observedAt);
+      let quote: MarketQuote;
+      try {
+        quote = normalizeBybitSpotTicker(ticker, observedAt);
+      } catch {
+        // Incomplete ticker (e.g. a delta event without bid1Price). Keep the
+        // previous state and wait for a full snapshot instead of erroring.
+        return undefined;
+      }
       const orderBook = book.toOrderBook(quote);
       return {
         quote,
@@ -90,11 +97,18 @@ export class BybitPublicAdapter {
       };
     }
 
-    const market = normalizeBybitLinearTicker(ticker, observedAt);
+    let market: PerpMarket;
+    let fundingRate: FundingRate;
+    try {
+      market = normalizeBybitLinearTicker(ticker, observedAt);
+      fundingRate = normalizeBybitFundingRate(ticker, observedAt);
+    } catch {
+      return undefined;
+    }
     const orderBook = book.toOrderBook(market);
     return {
       market,
-      fundingRate: normalizeBybitFundingRate(ticker, observedAt),
+      fundingRate,
       ...(orderBook === undefined ? {} : { orderBook }),
       stale: now - tickerAt > staleAfterMs || book.isStale(now, staleAfterMs),
     };
